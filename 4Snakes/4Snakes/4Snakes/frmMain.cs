@@ -59,6 +59,12 @@ namespace _4Snakes
         // A number (between 0 and 3) that will determins which snake is the player's
         private int _playerSnake;
 
+        // Has the player pressed a movement key
+        private bool _movementRequested;
+
+        // What direction has the player asked to go this frame
+        private Direction _requestedDirectionChange;
+
         // Boolean to tell the GameLoop to exit
         private bool _loopEnd;
 
@@ -75,6 +81,11 @@ namespace _4Snakes
         private int _mouse2Y;
         private int _mouse3X;
         private int _mouse3Y;
+
+        // How much total food has been eaten, tracks game speed
+        private int _foodEaten;
+        // How many milliseconds per game tick, gets smaller every 5 food eaten (to cap of 80)
+        private int _gameSpeed;
 
         // Picture boxes for holding food images
         private PictureBox _mouse1Pic;
@@ -145,6 +156,9 @@ namespace _4Snakes
             _snakes = new Snake[4];
             _snakeDirections = new Direction[4];
             _previousSnakeDirections = new Direction[4];
+
+            _foodEaten = 0;
+            _gameSpeed = 200;
 
             // Loop through the 4 snakes, index 0 - 3
             for (int nn = 0; nn <= 3; nn++)
@@ -392,7 +406,7 @@ namespace _4Snakes
                     // Allow Windows Forms specific time in the thread to paint itself (this is 
                     // another Windows Forms oddity that could be a gotcha)
                     Application.DoEvents();
-                } while (Environment.TickCount64 - 200 < startTicks);
+                } while (Environment.TickCount64 - _gameSpeed < startTicks);
 
             } while (!_loopEnd);
 
@@ -631,91 +645,6 @@ namespace _4Snakes
                         }
                     }
 
-                    if (_snakeDirections[nn] == Direction.East || _snakeDirections[nn] == Direction.West)
-                    {
-                        if (_mouse1X == _snakes[nn].Pieces[0].X)
-                        {
-                            if (_mouse1Y < _snakes[nn].Pieces[0].Y && !takenAbove)
-                            {
-                                _snakeDirections[nn] = Direction.North;
-                                continue;
-                            }
-                            else if (_mouse1Y > _snakes[nn].Pieces[0].Y && !takenBelow)
-                            {
-                                _snakeDirections[nn] = Direction.South;
-                                continue;
-                            }
-                        }
-                        if (_mouse2X == _snakes[nn].Pieces[0].X)
-                        {
-                            if (_mouse2Y < _snakes[nn].Pieces[0].Y && !takenAbove)
-                            {
-                                _snakeDirections[nn] = Direction.North;
-                                continue;
-                            }
-                            else if (_mouse2Y > _snakes[nn].Pieces[0].Y && !takenBelow)
-                            {
-                                _snakeDirections[nn] = Direction.South;
-                                continue;
-                            }
-                        }
-                        if (_mouse3X == _snakes[nn].Pieces[0].X)
-                        {
-                            if (_mouse3Y < _snakes[nn].Pieces[0].Y && !takenAbove)
-                            {
-                                _snakeDirections[nn] = Direction.North;
-                                continue;
-                            }
-                            else if (_mouse3Y > _snakes[nn].Pieces[0].Y && !takenBelow)
-                            {
-                                _snakeDirections[nn] = Direction.South;
-                                continue;
-                            }
-                        }
-                    }
-                    else if (_snakeDirections[nn] == Direction.North || _snakeDirections[nn] == Direction.South)
-                    {
-                        if (_mouse1Y == _snakes[nn].Pieces[0].Y)
-                        {
-                            if (_mouse1X < _snakes[nn].Pieces[0].X && !takenLeft)
-                            {
-                                _snakeDirections[nn] = Direction.West;
-                                continue;
-                            }
-                            else if (_mouse1X > _snakes[nn].Pieces[0].X && !takenRight)
-                            {
-                                _snakeDirections[nn] = Direction.East;
-                                continue;
-                            }
-                        }
-                        if (_mouse2Y == _snakes[nn].Pieces[0].Y)
-                        {
-                            if (_mouse2X < _snakes[nn].Pieces[0].X && !takenLeft)
-                            {
-                                _snakeDirections[nn] = Direction.West;
-                                continue;
-                            }
-                            else if (_mouse2X > _snakes[nn].Pieces[0].X && !takenRight)
-                            {
-                                _snakeDirections[nn] = Direction.East;
-                                continue;
-                            }
-                        }
-                        if (_mouse3Y == _snakes[nn].Pieces[0].Y)
-                        {
-                            if (_mouse3X < _snakes[nn].Pieces[0].X && !takenLeft)
-                            {
-                                _snakeDirections[nn] = Direction.West;
-                                continue;
-                            }
-                            else if (_mouse3X > _snakes[nn].Pieces[0].Y && !takenRight)
-                            {
-                                _snakeDirections[nn] = Direction.East;
-                                continue;
-                            }
-                        }
-                    }
-
                     bool preferStraight = false;
                     if (_snakeDirections[nn] == Direction.North || _snakeDirections[nn] == Direction.South)
                     {
@@ -734,56 +663,88 @@ namespace _4Snakes
                         }
                     }
 
-
-                    if (_rnd.Next(0, 100) < 15 && !preferStraight)
+                    if (!preferStraight)
                     {
-                        if (_snakeDirections[nn] == Direction.North || _snakeDirections[nn] == Direction.South)
+                        if (_snakeDirections[nn] == Direction.East || _snakeDirections[nn] == Direction.West)
                         {
-                            if (_snakes[nn].Pieces[0].X == 0)
+                            if (_mouse1X == _snakes[nn].Pieces[0].X)
                             {
-                                if (!takenRight)
+                                if (_mouse1Y < _snakes[nn].Pieces[0].Y && !takenAbove)
                                 {
-                                    _snakeDirections[nn] = Direction.East;
+                                    _snakeDirections[nn] = Direction.North;
                                     continue;
                                 }
-                            }
-                            else if (_snakes[nn].Pieces[0].X == 31)
-                            {
-                                if (!takenLeft)
-                                {
-                                    _snakeDirections[nn] = Direction.West;
-                                    continue;
-                                }
-                            }
-                            else if (!takenLeft && !takenRight)
-                            {
-                                _snakeDirections[nn] = _rnd.Next(0, 100) < 50 ? Direction.East : Direction.West;
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            if (_snakes[nn].Pieces[0].Y == 0)
-                            {
-                                if (!takenBelow)
+                                else if (_mouse1Y > _snakes[nn].Pieces[0].Y && !takenBelow)
                                 {
                                     _snakeDirections[nn] = Direction.South;
                                     continue;
                                 }
                             }
-                            else if (_snakes[nn].Pieces[0].Y == 23)
+                            if (_mouse2X == _snakes[nn].Pieces[0].X)
                             {
-                                if (!takenAbove)
+                                if (_mouse2Y < _snakes[nn].Pieces[0].Y && !takenAbove)
                                 {
                                     _snakeDirections[nn] = Direction.North;
                                     continue;
                                 }
-                            }
-                            else
-                            {
-                                if (!takenAbove && !takenBelow)
+                                else if (_mouse2Y > _snakes[nn].Pieces[0].Y && !takenBelow)
                                 {
-                                    _snakeDirections[nn] = _rnd.Next(0, 100) < 50 ? Direction.North : Direction.South;
+                                    _snakeDirections[nn] = Direction.South;
+                                    continue;
+                                }
+                            }
+                            if (_mouse3X == _snakes[nn].Pieces[0].X)
+                            {
+                                if (_mouse3Y < _snakes[nn].Pieces[0].Y && !takenAbove)
+                                {
+                                    _snakeDirections[nn] = Direction.North;
+                                    continue;
+                                }
+                                else if (_mouse3Y > _snakes[nn].Pieces[0].Y && !takenBelow)
+                                {
+                                    _snakeDirections[nn] = Direction.South;
+                                    continue;
+                                }
+                            }
+                        }
+                        else if (_snakeDirections[nn] == Direction.North || _snakeDirections[nn] == Direction.South)
+                        {
+                            if (_mouse1Y == _snakes[nn].Pieces[0].Y)
+                            {
+                                if (_mouse1X < _snakes[nn].Pieces[0].X && !takenLeft)
+                                {
+                                    _snakeDirections[nn] = Direction.West;
+                                    continue;
+                                }
+                                else if (_mouse1X > _snakes[nn].Pieces[0].X && !takenRight)
+                                {
+                                    _snakeDirections[nn] = Direction.East;
+                                    continue;
+                                }
+                            }
+                            if (_mouse2Y == _snakes[nn].Pieces[0].Y)
+                            {
+                                if (_mouse2X < _snakes[nn].Pieces[0].X && !takenLeft)
+                                {
+                                    _snakeDirections[nn] = Direction.West;
+                                    continue;
+                                }
+                                else if (_mouse2X > _snakes[nn].Pieces[0].X && !takenRight)
+                                {
+                                    _snakeDirections[nn] = Direction.East;
+                                    continue;
+                                }
+                            }
+                            if (_mouse3Y == _snakes[nn].Pieces[0].Y)
+                            {
+                                if (_mouse3X < _snakes[nn].Pieces[0].X && !takenLeft)
+                                {
+                                    _snakeDirections[nn] = Direction.West;
+                                    continue;
+                                }
+                                else if (_mouse3X > _snakes[nn].Pieces[0].Y && !takenRight)
+                                {
+                                    _snakeDirections[nn] = Direction.East;
                                     continue;
                                 }
                             }
@@ -853,6 +814,12 @@ namespace _4Snakes
         // Move the snakes
         private void MoveSnakes()
         {
+
+            if (_movementRequested)
+            {
+                _snakeDirections[_playerSnake] = _requestedDirectionChange;
+                _movementRequested = false;
+            }
                         
             // Loop each snake
             for (int nn = 0; nn <= 3; nn++)
@@ -971,6 +938,8 @@ namespace _4Snakes
             newPiece.Pictue.Top = newPiece.Y * 25;
             newPiece.Pictue.Left = newPiece.X * 25;
 
+            newPiece.Pictue.BringToFront();
+
             // Add it to the list, and then set the snakes body array to be the
             // contents of this list (existing + the new piece)
             existing.Add(newPiece);
@@ -1000,6 +969,12 @@ namespace _4Snakes
                     _turquoiseScore += 1;
                     lblTealScore.Text = _turquoiseScore.ToString();
                     break;
+            }
+
+            _foodEaten += 1;
+            if (_foodEaten % 5 == 0 && _gameSpeed > 80)
+            {
+                _gameSpeed -= 10;
             }
         }
 
@@ -1091,28 +1066,48 @@ namespace _4Snakes
             {
                 if (_snakeDirections[_playerSnake] != Direction.South)
                 {
-                    _snakeDirections[_playerSnake] = Direction.North;
+                    _requestedDirectionChange = Direction.North;
+                    _movementRequested = true;
+                }
+                else
+                {
+                    _movementRequested = false;
                 }
             }
             else if (e.KeyCode == Keys.Down)
             {
                 if (_snakeDirections[_playerSnake] != Direction.North)
                 {
-                    _snakeDirections[_playerSnake] = Direction.South;
+                    _requestedDirectionChange = Direction.South;
+                    _movementRequested = true;
+                }
+                else
+                {
+                    _movementRequested = false;
                 }
             }
             else if (e.KeyCode == Keys.Left)
             {
                 if (_snakeDirections[_playerSnake] != Direction.East)
                 {
-                    _snakeDirections[_playerSnake] = Direction.West;
+                    _requestedDirectionChange= Direction.West;
+                    _movementRequested = true;
+                }
+                else
+                {
+                    _movementRequested = false;
                 }
             }
             else if (e.KeyCode == Keys.Right)
             {
                 if (_snakeDirections [_playerSnake] != Direction.West)
                 {
-                    _snakeDirections[_playerSnake] = Direction.East;
+                    _requestedDirectionChange = Direction.East;
+                    _movementRequested = true;
+                }
+                else
+                {
+                    _movementRequested = false;
                 }
             }
         }
